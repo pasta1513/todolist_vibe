@@ -4,7 +4,7 @@
 
 ## 현재 상태
 
-- 아직 만들기 전입니다. 코드는 없고 README.md, AGENTS.md, DECISIONS.md, PLAN.md, PRD.md만 있습니다.
+- 아직 만들기 전입니다. 코드는 없고 README.md, AGENTS.md, DECISIONS.md, PLAN.md, PRD.md, ARCHITECTURE.md만 있습니다.
 - 이 폴더는 Git 저장소로 기록합니다 (D-005). 원격 저장소는 정하지 않았습니다.
 - 앱 안에는 AI 기능을 넣지 않습니다.
 
@@ -17,6 +17,7 @@
 | DECISIONS.md | 사람이 확정한 결정 기록 |
 | PLAN.md | 이번 목표, 작업 목록, 검증 결과, 남은 문제 |
 | PRD.md | 첫 버전 요구사항: 넣을 기능, 기능 규칙, 넣지 않을 기능, 요구사항 후보와 검토 |
+| ARCHITECTURE.md | 부품과 책임: 구성 요소, 데이터 흐름, 실패 흐름 |
 
 ## 시작 방법
 
