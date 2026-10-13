@@ -141,7 +141,7 @@
 - **적용 범위**
   첫 버전 웹앱 전체
 - **관련 기준 문서**
-  ARCHITECTURE.md, TEST-PLAN.md(작성 예정)
+  ARCHITECTURE.md, TEST-PLAN.md
 - **유효 상태**
   유효
 
