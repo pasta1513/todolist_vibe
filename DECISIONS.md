@@ -55,7 +55,7 @@
 - **적용 범위**
   카드 지우기 기능
 - **관련 기준 문서**
-  PRD.md, ARCHITECTURE.md, SCREEN-SPEC.md(작성 예정)
+  PRD.md, ARCHITECTURE.md, SCREEN-SPEC.md
 - **유효 상태**
   유효
 
@@ -174,7 +174,7 @@
 - **적용 범위**
   첫 버전 개발 중 실행
 - **관련 기준 문서**
-  ARCHITECTURE.md, API-SPEC.md(작성 예정)
+  ARCHITECTURE.md, API-SPEC.md
 - **유효 상태**
   유효
 

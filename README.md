@@ -4,7 +4,7 @@
 
 ## 현재 상태
 
-- 아직 만들기 전입니다. 코드는 없고 README.md, AGENTS.md, DECISIONS.md, PLAN.md, PRD.md, ARCHITECTURE.md, SCREEN-SPEC.md, DATA-MODEL.md만 있습니다.
+- 아직 만들기 전입니다. 코드는 없고 README.md, AGENTS.md, DECISIONS.md, PLAN.md, PRD.md, ARCHITECTURE.md, SCREEN-SPEC.md, DATA-MODEL.md, API-SPEC.md만 있습니다.
 - 이 폴더는 Git 저장소로 기록합니다 (D-005). 원격 저장소는 정하지 않았습니다.
 - 앱 안에는 AI 기능을 넣지 않습니다.
 
@@ -20,6 +20,7 @@
 | ARCHITECTURE.md | 부품과 책임: 구성 요소, 데이터 흐름, 실패 흐름 |
 | SCREEN-SPEC.md | 화면에서 보이는 것과 할 수 있는 행동: 화면 영역, 대안과 결정, 규칙 |
 | DATA-MODEL.md | 저장할 정보의 이름과 뜻: 데이터 의미, Task 필드, 상태 값, SQLite 변환 초안, 검토 기록, 데이터 규칙 결정 기록 |
+| API-SPEC.md | 화면과 서버의 약속: 사용자 행동 계약, 공통 규칙, 엔드포인트, 요청·응답 예시, 이번에 구현하지 않는 항목, API 계약 결정 기록 |
 
 ## 시작 방법
 
