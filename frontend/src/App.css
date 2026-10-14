@@ -1,0 +1,16 @@
+/* 세 칸 보드: 기본은 가로로 나란히 놓는다 */
+.board {
+  display: flex;
+  gap: 16px;
+}
+
+.column {
+  flex: 1;
+}
+
+/* 화면 폭이 768px보다 좁으면 세 칸을 세로로 쌓는다 (SCREEN-SPEC 규칙 "좁은 화면") */
+@media (max-width: 767.98px) {
+  .board {
+    flex-direction: column;
+  }
+}

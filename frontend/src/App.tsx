@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchTasks, type Task, type TaskStatus } from "./api";
 import CreateDialog from "./CreateDialog";
+import "./App.css";
 
 // 세 칸 보드 (SCREEN-SPEC "1. 세 칸 보드", R-007)
 const COLUMNS: { status: TaskStatus; title: string }[] = [
@@ -32,9 +33,9 @@ export default function App() {
       <button type="button" onClick={() => setCreating(true)}>
         새 카드
       </button>
-      <main style={{ display: "flex", gap: "16px" }}>
+      <main className="board">
         {COLUMNS.map((column) => (
-          <section key={column.status} style={{ flex: 1 }}>
+          <section key={column.status} className="column">
             <h2>{column.title}</h2>
             {/* 서버가 준 순서대로 놓는다 (D-015) */}
             {tasks
