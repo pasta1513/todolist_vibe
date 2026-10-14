@@ -10,7 +10,7 @@ export type Task = {
   position: number;
 };
 
-// 목록 보기: position이 큰 카드부터 온다 (D-015)
+// 목록 보기: position이 작은 카드부터 온다 (D-015, D-020)
 export async function fetchTasks(): Promise<Task[]> {
   const res = await fetch("/api/tasks");
   if (!res.ok) {

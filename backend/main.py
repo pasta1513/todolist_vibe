@@ -46,12 +46,12 @@ def parse_id(raw: str) -> int | None:
     return int(raw)
 
 
-# 목록 보기: position이 큰 카드부터 (API-SPEC "엔드포인트")
+# 목록 보기: position이 작은 카드부터 (API-SPEC "엔드포인트", D-020)
 @app.get("/api/tasks")
 def list_tasks():
     conn = db.connect()
     try:
-        rows = conn.execute(f"SELECT {TASK_COLUMNS} FROM tasks ORDER BY position DESC").fetchall()
+        rows = conn.execute(f"SELECT {TASK_COLUMNS} FROM tasks ORDER BY position ASC").fetchall()
     finally:
         conn.close()
     return [dict(row) for row in rows]

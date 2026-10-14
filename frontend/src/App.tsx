@@ -23,19 +23,19 @@ export default function App() {
   }, []);
 
   // 서버가 성공을 응답한 뒤에만 카드를 더한다 (D-014)
-  // 새 카드는 가장 큰 position을 받으므로 맨 앞에 놓으면 "할 일" 칸 맨 위가 된다 (R-008)
+  // 새 카드는 가장 큰 position을 받으므로 맨 끝에 놓으면 "할 일" 칸 맨 아래가 된다 (R-008, D-020)
   function handleCreated(task: Task) {
-    setTasks((prev) => [task, ...prev]);
+    setTasks((prev) => [...prev, task]);
     setCreating(false);
   }
 
-  // 바뀐 카드를 넣고 position이 큰 순서로 다시 놓는다.
-  // 상태가 바뀐 카드는 가장 큰 position을 받아 새 칸 맨 위에 온다 (D-015, R-008)
+  // 바뀐 카드를 넣고 position이 작은 순서로 다시 놓는다.
+  // 상태가 바뀐 카드는 가장 큰 position을 받아 새 칸 맨 아래에 온다 (D-015, R-008, D-020)
   function handleChanged(changed: Task) {
     setTasks((prev) =>
       prev
         .map((task) => (task.id === changed.id ? changed : task))
-        .sort((a, b) => b.position - a.position),
+        .sort((a, b) => a.position - b.position),
     );
   }
 
