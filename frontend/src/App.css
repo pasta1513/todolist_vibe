@@ -6,6 +6,34 @@
 
 .column {
   flex: 1;
+  /* 긴 제목이 칸 폭을 넓히지 않게 한다 */
+  min-width: 0;
+}
+
+/* 카드에서 제목은 한 줄까지 보이고, 넘으면 "…"으로 줄인다 (R-011) */
+.card-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 카드에서 설명은 두 줄까지 보이고, 넘으면 "…"으로 줄인다 (R-011) */
+.card-description {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* 고치기 입력칸: 칸 폭에 맞춰 감기고, 높이는 글 길이에 맞게 늘어난다 */
+.auto-textarea {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  resize: none;
+  overflow: hidden;
 }
 
 /* 화면 폭이 768px보다 좁으면 세 칸을 세로로 쌓는다 (SCREEN-SPEC 규칙 "좁은 화면") */

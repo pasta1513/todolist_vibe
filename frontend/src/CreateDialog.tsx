@@ -1,10 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { createTask, type Task } from "./api";
-
-// 빈칸 글자만 있으면 빈 제목으로 본다 (SCREEN-SPEC 규칙 "빈칸 글자")
-function isBlank(text: string): boolean {
-  return text.trim() === "";
-}
+import { isBlank } from "./text";
 
 type Props = {
   onCreated: (task: Task) => void;

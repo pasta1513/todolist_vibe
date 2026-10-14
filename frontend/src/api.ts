@@ -44,3 +44,24 @@ export async function createTask(title: string, description: string | null): Pro
   }
   return res.json();
 }
+
+// 내용 수정: 제목과 설명을 함께 보낸다 (API-SPEC S-7)
+export async function updateTask(id: number, title: string, description: string | null): Promise<Task> {
+  const res = await fetch(`/api/tasks/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title, description }),
+  });
+  if (!res.ok) {
+    throw new Error(`PATCH /api/tasks/${id} failed: ${res.status}`);
+  }
+  return res.json();
+}
+
+// 삭제: 성공하면 204, 응답 본문은 읽지 않는다 (API-SPEC 결정 기록 10)
+export async function deleteTask(id: number): Promise<void> {
+  const res = await fetch(`/api/tasks/${id}`, { method: "DELETE" });
+  if (!res.ok) {
+    throw new Error(`DELETE /api/tasks/${id} failed: ${res.status}`);
+  }
+}

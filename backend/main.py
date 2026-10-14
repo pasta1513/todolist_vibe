@@ -3,7 +3,7 @@ import sqlite3
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 
 import db
 
@@ -39,6 +39,32 @@ async def read_body(request: Request) -> dict | None:
     return body if isinstance(body, dict) else None
 
 
+def check_title_description(body: dict) -> dict[str, str]:
+    # 만들기와 내용 수정이 함께 쓰는 검사 (API-SPEC "서버 입력 검사")
+    # 틀린 칸은 모두 모아 돌려준다 (API-SPEC 결정 기록 11)
+    # 정해지지 않은 필드(status, id 등)는 쓰지 않는다 (API-SPEC "정해지지 않은 필드")
+    fields: dict[str, str] = {}
+    if "title" not in body:
+        fields["title"] = "MISSING"
+    elif not isinstance(body["title"], str):
+        fields["title"] = "WRONG_TYPE"
+    elif is_blank(body["title"]):
+        fields["title"] = "EMPTY"
+    if "description" not in body:
+        fields["description"] = "MISSING"
+    elif body["description"] is not None and not isinstance(body["description"], str):
+        fields["description"] = "WRONG_TYPE"
+    return fields
+
+
+def title_description(body: dict) -> tuple[str, str | None]:
+    # 적은 글은 그대로 저장하고, 빈칸 글자만 든 설명은 null로 바꾼다 (API-SPEC 결정 기록 7)
+    description = body["description"]
+    if description is not None and is_blank(description):
+        description = None
+    return body["title"], description
+
+
 def parse_id(raw: str) -> int | None:
     # 주소의 {id}가 숫자가 아니면 None (API-SPEC "서버 입력 검사" {id})
     if re.fullmatch(r"-?[0-9]+", raw) is None:
@@ -63,28 +89,10 @@ async def create_task(request: Request):
     body = await read_body(request)
     if body is None:
         return invalid_input({})
-
-    # 틀린 칸은 모두 모아 돌려준다 (API-SPEC 결정 기록 11)
-    # 정해지지 않은 필드(status, id 등)는 쓰지 않는다 (API-SPEC "정해지지 않은 필드")
-    fields: dict[str, str] = {}
-    if "title" not in body:
-        fields["title"] = "MISSING"
-    elif not isinstance(body["title"], str):
-        fields["title"] = "WRONG_TYPE"
-    elif is_blank(body["title"]):
-        fields["title"] = "EMPTY"
-    if "description" not in body:
-        fields["description"] = "MISSING"
-    elif body["description"] is not None and not isinstance(body["description"], str):
-        fields["description"] = "WRONG_TYPE"
+    fields = check_title_description(body)
     if fields:
         return invalid_input(fields)
-
-    # 적은 글은 그대로 저장하고, 빈칸 글자만 든 설명은 null로 바꾼다 (API-SPEC 결정 기록 7)
-    title = body["title"]
-    description = body["description"]
-    if description is not None and is_blank(description):
-        description = None
+    title, description = title_description(body)
 
     conn = db.connect()
     try:
@@ -143,3 +151,54 @@ async def change_status(task_id: str, request: Request):
     finally:
         conn.close()
     return dict(row)
+
+
+# 내용 수정: title과 description만 바꾸고 순서는 그대로 둔다 (API-SPEC "사용자 행동 계약", R-008)
+# 검사 순서: {id} 형식 → 본문 → 카드가 있는지 (API-SPEC "검사 순서")
+@app.patch("/api/tasks/{task_id}")
+async def update_task(task_id: str, request: Request):
+    id_ = parse_id(task_id)
+    if id_ is None:
+        return invalid_input({"id": "WRONG_TYPE"})
+    body = await read_body(request)
+    if body is None:
+        return invalid_input({})
+    fields = check_title_description(body)
+    if fields:
+        return invalid_input(fields)
+    title, description = title_description(body)
+
+    conn = db.connect()
+    try:
+        with conn:
+            cursor = conn.execute(
+                "UPDATE tasks SET title = ?, description = ? WHERE id = ?", (title, description, id_)
+            )
+            if cursor.rowcount == 0:
+                return JSONResponse(status_code=404, content={"error": "NOT_FOUND"})
+            row = conn.execute(f"SELECT {TASK_COLUMNS} FROM tasks WHERE id = ?", (id_,)).fetchone()
+    except sqlite3.Error:
+        return JSONResponse(status_code=500, content={"error": "SAVE_FAILED"})
+    finally:
+        conn.close()
+    return dict(row)
+
+
+# 삭제: 되돌릴 수 없고, last_position은 줄이지 않는다 (API-SPEC "사용자 행동 계약", D-004)
+@app.delete("/api/tasks/{task_id}", status_code=204)
+def delete_task(task_id: str):
+    id_ = parse_id(task_id)
+    if id_ is None:
+        return invalid_input({"id": "WRONG_TYPE"})
+
+    conn = db.connect()
+    try:
+        with conn:
+            cursor = conn.execute("DELETE FROM tasks WHERE id = ?", (id_,))
+            if cursor.rowcount == 0:
+                return JSONResponse(status_code=404, content={"error": "NOT_FOUND"})
+    except sqlite3.Error:
+        return JSONResponse(status_code=500, content={"error": "SAVE_FAILED"})
+    finally:
+        conn.close()
+    return Response(status_code=204)

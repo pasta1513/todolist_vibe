@@ -14,6 +14,8 @@ const COLUMNS: { status: TaskStatus; title: string }[] = [
 export default function App() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [creating, setCreating] = useState(false);
+  // 한 번에 한 장만 고친다 (D-018)
+  const [editingId, setEditingId] = useState<number | null>(null);
 
   useEffect(() => {
     // 실패 알림은 P-18에서 만든다
@@ -39,6 +41,11 @@ export default function App() {
     );
   }
 
+  // 서버가 지우기에 성공한 뒤에만 카드를 뺀다 (D-014)
+  function handleDeleted(id: number) {
+    setTasks((prev) => prev.filter((task) => task.id !== id));
+  }
+
   return (
     <>
       <button type="button" onClick={() => setCreating(true)}>
@@ -52,7 +59,16 @@ export default function App() {
             {tasks
               .filter((task) => task.status === column.status)
               .map((task) => (
-                <TaskCard key={task.id} task={task} onChanged={handleChanged} />
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  editing={editingId === task.id}
+                  editLocked={editingId !== null && editingId !== task.id}
+                  onStartEdit={() => setEditingId(task.id)}
+                  onEndEdit={() => setEditingId(null)}
+                  onChanged={handleChanged}
+                  onDeleted={handleDeleted}
+                />
               ))}
           </section>
         ))}
