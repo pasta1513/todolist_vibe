@@ -9,5 +9,9 @@ export default defineConfig({
     port: 5173,
     // 5173을 이미 쓰고 있으면 다른 번호로 바꾸지 않고 멈춘다
     strictPort: true,
+    // /api 요청은 FastAPI 서버로 넘긴다 (D-012)
+    proxy: {
+      "/api": "http://127.0.0.1:8000",
+    },
   },
 });
