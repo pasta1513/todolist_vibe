@@ -78,6 +78,9 @@ def list_tasks():
     conn = db.connect()
     try:
         rows = conn.execute(f"SELECT {TASK_COLUMNS} FROM tasks ORDER BY position ASC").fetchall()
+    except sqlite3.Error:
+        # 저장소에서 읽지 못했다 (API-SPEC "실패 응답" LOAD_FAILED)
+        return JSONResponse(status_code=500, content={"error": "LOAD_FAILED"})
     finally:
         conn.close()
     return [dict(row) for row in rows]

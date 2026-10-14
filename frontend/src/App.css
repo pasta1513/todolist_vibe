@@ -42,3 +42,21 @@
     flex-direction: column;
   }
 }
+
+/* 실패 알림: 화면 위쪽, 만들기 창보다 위에 놓인다 (SCREEN-SPEC "5. 실패 알림", 규칙 "실패 알림과 창") */
+.alerts {
+  position: fixed;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.alert {
+  background: #fff0f0;
+  border: 1px solid #c33;
+  padding: 8px 12px;
+}

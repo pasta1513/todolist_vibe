@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { isNotFound } from "./Alerts";
 import { changeStatus, deleteTask, updateTask, type Task, type TaskStatus } from "./api";
 import { isBlank } from "./text";
 
@@ -18,6 +19,7 @@ type Props = {
   onEndEdit: () => void;
   onChanged: (task: Task) => void;
   onDeleted: (id: number) => void;
+  onFailure: (err: unknown) => void;
 };
 
 // 카드 한 장 (SCREEN-SPEC "3. 카드 한 장", "4. 카드 고치기")
@@ -29,6 +31,7 @@ export default function TaskCard({
   onEndEdit,
   onChanged,
   onDeleted,
+  onFailure,
 }: Props) {
   const [statusPending, setStatusPending] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -40,8 +43,7 @@ export default function TaskCard({
     try {
       onChanged(await changeStatus(task.id, status));
     } catch (err) {
-      // 실패하면 카드는 그대로 둔다 (D-014). 실패 알림은 P-18에서 만든다
-      console.error(err);
+      handleFailure(err);
     } finally {
       setStatusPending(false);
     }
@@ -54,16 +56,24 @@ export default function TaskCard({
       await deleteTask(task.id);
       onDeleted(task.id);
     } catch (err) {
-      // 실패하면 카드는 그대로 둔다 (D-014). 실패 알림은 P-18에서 만든다
-      console.error(err);
       setDeletePending(false);
+      handleFailure(err);
+    }
+  }
+
+  // 실패하면 위쪽에 알리고 카드는 그대로 둔다 (D-014).
+  // 카드가 이미 없다는 실패만은 카드를 화면에서 치운다 (D-021)
+  function handleFailure(err: unknown) {
+    onFailure(err);
+    if (isNotFound(err)) {
+      onDeleted(task.id);
     }
   }
 
   return (
     <article className="card">
       {editing ? (
-        <EditForm task={task} onSaved={onChanged} onClose={onEndEdit} />
+        <EditForm task={task} onSaved={onChanged} onClose={onEndEdit} onFailure={handleFailure} />
       ) : (
         <>
           <h3 className="card-title">{task.title}</h3>
@@ -110,10 +120,11 @@ type EditFormProps = {
   task: Task;
   onSaved: (task: Task) => void;
   onClose: () => void;
+  onFailure: (err: unknown) => void;
 };
 
 // 카드 자리에서 바로 고친다 (D-018). 원래 제목과 설명이 채워진 채로 시작한다 (R-004)
-function EditForm({ task, onSaved, onClose }: EditFormProps) {
+function EditForm({ task, onSaved, onClose, onFailure }: EditFormProps) {
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description ?? "");
   const [showTitleHint, setShowTitleHint] = useState(false);
@@ -143,8 +154,8 @@ function EditForm({ task, onSaved, onClose }: EditFormProps) {
       onClose();
     } catch (err) {
       // 실패하면 입력칸과 적은 내용을 그대로 둔다 (SCREEN-SPEC 규칙 "고치기 저장 실패")
-      console.error(err);
       setPending(false);
+      onFailure(err);
     }
   }
 

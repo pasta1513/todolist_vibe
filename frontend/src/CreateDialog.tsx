@@ -5,11 +5,12 @@ import { isBlank } from "./text";
 type Props = {
   onCreated: (task: Task) => void;
   onClose: () => void;
+  onFailure: (err: unknown) => void;
 };
 
 // 새 카드 만들기 창 (SCREEN-SPEC "2. 새 카드 만들기", D-017)
 // 닫으면 이 창이 사라지면서 적던 내용도 함께 지워진다 (R-019)
-export default function CreateDialog({ onCreated, onClose }: Props) {
+export default function CreateDialog({ onCreated, onClose, onFailure }: Props) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [showTitleHint, setShowTitleHint] = useState(false);
@@ -36,8 +37,8 @@ export default function CreateDialog({ onCreated, onClose }: Props) {
       const task = await createTask(title, description === "" ? null : description);
       onCreated(task);
     } catch (err) {
-      // 실패하면 창과 적은 내용을 그대로 둔다 (D-017). 실패 알림은 P-18에서 만든다
-      console.error(err);
+      // 실패하면 창과 적은 내용을 그대로 두고 위쪽에 알린다 (D-017, SCREEN-SPEC "실패 알림")
+      onFailure(err);
       setPending(false);
     }
   }
