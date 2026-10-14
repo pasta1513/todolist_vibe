@@ -1,8 +1,10 @@
+import os
 import sqlite3
 from pathlib import Path
 
 # 저장 파일 위치: backend/data/todo.db
-DB_PATH = Path(__file__).parent / "data" / "todo.db"
+# 시험할 때는 환경 변수 TODO_DB_PATH로 다른 파일을 쓴다
+DB_PATH = Path(os.environ.get("TODO_DB_PATH") or Path(__file__).parent / "data" / "todo.db")
 
 # 표 모양은 DATA-MODEL.md "SQLite 변환 초안"과 같다
 SCHEMA = """
