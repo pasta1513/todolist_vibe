@@ -4,7 +4,8 @@
 
 ## 현재 상태
 
-- 요구사항과 설계 문서 확정, 구현 전입니다. 정하지 않은 것은 각 문서의 "열린 질문"에 남아 있습니다. 코드는 없고 README.md, AGENTS.md, DECISIONS.md, PLAN.md, PRD.md, ARCHITECTURE.md, SCREEN-SPEC.md, DATA-MODEL.md, API-SPEC.md, TEST-PLAN.md만 있습니다.
+- 요구사항과 설계 문서를 확정했고, 구현 중입니다 (PLAN.md P-10~P-20). 정하지 않은 것은 각 문서의 "열린 질문"에 남아 있습니다.
+- 코드는 `frontend/`의 화면 틀(P-11)만 있습니다. 세 칸 제목만 보이고, 서버(`backend/`)는 아직 없습니다.
 - 이 폴더는 Git 저장소로 기록합니다 (D-005). 원격 저장소는 정하지 않았습니다.
 - 앱 안에는 AI 기능을 넣지 않습니다.
 
