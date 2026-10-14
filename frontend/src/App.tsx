@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchTasks, type Task, type TaskStatus } from "./api";
 import CreateDialog from "./CreateDialog";
+import TaskCard from "./TaskCard";
 import "./App.css";
 
 // 세 칸 보드 (SCREEN-SPEC "1. 세 칸 보드", R-007)
@@ -28,6 +29,16 @@ export default function App() {
     setCreating(false);
   }
 
+  // 바뀐 카드를 넣고 position이 큰 순서로 다시 놓는다.
+  // 상태가 바뀐 카드는 가장 큰 position을 받아 새 칸 맨 위에 온다 (D-015, R-008)
+  function handleChanged(changed: Task) {
+    setTasks((prev) =>
+      prev
+        .map((task) => (task.id === changed.id ? changed : task))
+        .sort((a, b) => b.position - a.position),
+    );
+  }
+
   return (
     <>
       <button type="button" onClick={() => setCreating(true)}>
@@ -41,10 +52,7 @@ export default function App() {
             {tasks
               .filter((task) => task.status === column.status)
               .map((task) => (
-                <article key={task.id}>
-                  <h3>{task.title}</h3>
-                  {task.description !== null && <p>{task.description}</p>}
-                </article>
+                <TaskCard key={task.id} task={task} onChanged={handleChanged} />
               ))}
           </section>
         ))}

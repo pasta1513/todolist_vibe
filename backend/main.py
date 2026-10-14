@@ -1,3 +1,4 @@
+import re
 import sqlite3
 from contextlib import asynccontextmanager
 
@@ -7,6 +8,7 @@ from fastapi.responses import JSONResponse
 import db
 
 TASK_COLUMNS = "id, title, description, status, position"
+STATUSES = ("TODO", "IN_PROGRESS", "DONE")
 
 
 @asynccontextmanager
@@ -28,6 +30,22 @@ def is_blank(text: str) -> bool:
     return text.strip() == ""
 
 
+async def read_body(request: Request) -> dict | None:
+    # 본문이 JSON 객체가 아니면 None (API-SPEC "요청 본문")
+    try:
+        body = await request.json()
+    except ValueError:
+        return None
+    return body if isinstance(body, dict) else None
+
+
+def parse_id(raw: str) -> int | None:
+    # 주소의 {id}가 숫자가 아니면 None (API-SPEC "서버 입력 검사" {id})
+    if re.fullmatch(r"-?[0-9]+", raw) is None:
+        return None
+    return int(raw)
+
+
 # 목록 보기: position이 큰 카드부터 (API-SPEC "엔드포인트")
 @app.get("/api/tasks")
 def list_tasks():
@@ -42,12 +60,8 @@ def list_tasks():
 # 새 카드 만들기 (API-SPEC "사용자 행동 계약", "서버 입력 검사")
 @app.post("/api/tasks", status_code=201)
 async def create_task(request: Request):
-    try:
-        body = await request.json()
-    except ValueError:
-        return invalid_input({})
-    # 본문이 JSON 객체가 아니면 거절한다 (API-SPEC "요청 본문")
-    if not isinstance(body, dict):
+    body = await read_body(request)
+    if body is None:
         return invalid_input({})
 
     # 틀린 칸은 모두 모아 돌려준다 (API-SPEC 결정 기록 11)
@@ -85,6 +99,45 @@ async def create_task(request: Request):
             row = conn.execute(
                 f"SELECT {TASK_COLUMNS} FROM tasks WHERE id = ?", (cursor.lastrowid,)
             ).fetchone()
+    except sqlite3.Error:
+        return JSONResponse(status_code=500, content={"error": "SAVE_FAILED"})
+    finally:
+        conn.close()
+    return dict(row)
+
+
+# 상태 바꾸기 (API-SPEC "사용자 행동 계약", 결정 기록 5)
+@app.patch("/api/tasks/{task_id}/status")
+async def change_status(task_id: str, request: Request):
+    id_ = parse_id(task_id)
+    if id_ is None:
+        return invalid_input({"id": "WRONG_TYPE"})
+    body = await read_body(request)
+    if body is None:
+        return invalid_input({})
+    # 세 상태 값만 받는다 (DATA-MODEL 결정 기록 3)
+    if "status" not in body:
+        return invalid_input({"status": "MISSING"})
+    status = body["status"]
+    if status not in STATUSES:
+        return invalid_input({"status": "NOT_ALLOWED"})
+
+    conn = db.connect()
+    try:
+        with conn:
+            row = conn.execute(f"SELECT {TASK_COLUMNS} FROM tasks WHERE id = ?", (id_,)).fetchone()
+            if row is None:
+                return JSONResponse(status_code=404, content={"error": "NOT_FOUND"})
+            # 지금과 같은 상태면 아무것도 바꾸지 않는다 (API-SPEC 결정 기록 5)
+            if row["status"] == status:
+                return dict(row)
+            # 상태와 새 position, last_position은 함께 저장한다 (DATA-MODEL "순서 번호 기억 표")
+            conn.execute("UPDATE position_counter SET last_position = last_position + 1")
+            position = conn.execute("SELECT last_position FROM position_counter").fetchone()[0]
+            conn.execute(
+                "UPDATE tasks SET status = ?, position = ? WHERE id = ?", (status, position, id_)
+            )
+            row = conn.execute(f"SELECT {TASK_COLUMNS} FROM tasks WHERE id = ?", (id_,)).fetchone()
     except sqlite3.Error:
         return JSONResponse(status_code=500, content={"error": "SAVE_FAILED"})
     finally:

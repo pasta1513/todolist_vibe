@@ -19,6 +19,19 @@ export async function fetchTasks(): Promise<Task[]> {
   return res.json();
 }
 
+// 상태 바꾸기: 바뀐 카드를 돌려받는다 (API-SPEC "엔드포인트")
+export async function changeStatus(id: number, status: TaskStatus): Promise<Task> {
+  const res = await fetch(`/api/tasks/${id}/status`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status }),
+  });
+  if (!res.ok) {
+    throw new Error(`PATCH /api/tasks/${id}/status failed: ${res.status}`);
+  }
+  return res.json();
+}
+
 // 새 카드 만들기: 설명이 없으면 null을 보낸다 (API-SPEC S-8)
 export async function createTask(title: string, description: string | null): Promise<Task> {
   const res = await fetch("/api/tasks", {
