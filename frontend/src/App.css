@@ -62,7 +62,7 @@ button:focus-visible {
 
 .column-title {
   margin: 0 0 10px;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   color: #3a4150;
 }
@@ -80,7 +80,7 @@ button:focus-visible {
 /* 카드에서 제목은 한 줄까지 보이고, 넘으면 "…"으로 줄인다 (R-011) */
 .card-title {
   margin: 0 0 2px;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
@@ -98,6 +98,29 @@ button:focus-visible {
   overflow: hidden;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+/* 카드 펼치기: 제목·설명 부분을 누르거나 키보드로 Enter·스페이스 (SCREEN-SPEC 규칙 "카드 펼치기", P-23) */
+.card-body {
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.card-body:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.card.is-expanded .card-title {
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: anywhere;
+}
+
+.card.is-expanded .card-description {
+  display: block;
+  -webkit-line-clamp: unset;
+  overflow: visible;
 }
 
 /* 카드 아래 줄: 왼쪽은 상태 버튼, 오른쪽은 고치기·지우기. 폭이 모자라면 줄을 바꾼다 */
@@ -121,12 +144,12 @@ button:focus-visible {
   margin-left: auto;
 }
 
-/* 상태 버튼: 지금 상태 버튼은 흰 바탕에 흐린 글자로, 누를 수 없게 보인다 (SCREEN-SPEC 대안과 결정 9) */
+/* 상태 버튼: 누를 수 있는 버튼은 회색 글자 (P-23) */
 .status-button {
   font-size: 11px;
   line-height: 1.4;
   background: transparent;
-  color: #3a4150;
+  color: #a3abb8;
   border: 0;
   border-radius: 5px;
   padding: 1px 6px;
@@ -134,12 +157,20 @@ button:focus-visible {
 
 .status-button:hover:not(:disabled) {
   background: #f2f4f7;
+  color: #3a4150;
 }
 
+/* 고치는 중이거나 요청 중이라 막힌 버튼은 더 연한 회색 */
 .status-button:disabled {
+  color: #c9ced6;
+}
+
+/* 지금 상태 버튼: 검정 글자와 테두리로 진하게 표시하고, 누를 수 없다 (SCREEN-SPEC 대안과 결정 9, P-23) */
+.status-button.is-current {
   background: #fff;
-  color: #a3abb8;
-  box-shadow: 0 0 0 1px #d9dee6;
+  color: #1f2329;
+  font-weight: 600;
+  box-shadow: 0 0 0 1px #9aa3b2;
 }
 
 /* 고치기·지우기: 테두리 없는 글자 버튼 */

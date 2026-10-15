@@ -1,7 +1,15 @@
-import { useId, useLayoutEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import {
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type KeyboardEvent,
+  type MouseEvent,
+} from "react";
 import { isNotFound } from "./Alerts";
 import { changeStatus, deleteTask, updateTask, type Task, type TaskStatus } from "./api";
-import { isBlank } from "./text";
+import { isBlank, shortDescription, shortTitle } from "./text";
 
 // 상태 버튼 세 개 (SCREEN-SPEC 대안과 결정 9)
 const STATUS_BUTTONS: { status: TaskStatus; label: string }[] = [
@@ -36,6 +44,8 @@ export default function TaskCard({
   const [statusPending, setStatusPending] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deletePending, setDeletePending] = useState(false);
+  // 펼친 상태는 저장하지 않는다. 새로고침하면 접힌다 (SCREEN-SPEC 규칙 "카드 펼치기")
+  const [expanded, setExpanded] = useState(false);
 
   async function handleStatus(status: TaskStatus) {
     // 응답을 받을 때까지 이 카드의 상태 버튼을 누를 수 없다 (SCREEN-SPEC 규칙 "상태 바꾸기 요청 중")
@@ -70,16 +80,49 @@ export default function TaskCard({
     }
   }
 
-  return (
-    <article className="card">
-      {editing ? (
+  // 카드에서 버튼이 아닌 곳을 누르면 펼치고, 다시 누르면 접는다 (SCREEN-SPEC 규칙 "카드 펼치기")
+  function handleCardClick(event: MouseEvent<HTMLElement>) {
+    if ((event.target as HTMLElement).closest("button, .confirm")) {
+      return;
+    }
+    setExpanded((value) => !value);
+  }
+
+  // 키보드로 카드에 간 뒤 Enter나 스페이스로도 펼치고 접는다
+  function handleBodyKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      setExpanded((value) => !value);
+    }
+  }
+
+  // 고치는 동안에는 입력칸과 저장·취소만 보인다. 상태 버튼과 고치기·지우기는 보이지 않는다
+  // (SCREEN-SPEC 규칙 "고치는 동안 막는 것", D-018)
+  if (editing) {
+    return (
+      <article className="card">
         <EditForm task={task} onSaved={onChanged} onClose={onEndEdit} onFailure={handleFailure} />
-      ) : (
-        <>
-          <h3 className="card-title">{task.title}</h3>
-          {task.description !== null && <p className="card-description">{task.description}</p>}
-        </>
-      )}
+      </article>
+    );
+  }
+
+  return (
+    <article className={expanded ? "card is-expanded" : "card"} onClick={handleCardClick}>
+      <div
+        className="card-body"
+        role="button"
+        tabIndex={0}
+        aria-expanded={expanded}
+        onKeyDown={handleBodyKeyDown}
+      >
+        {/* 접힌 카드는 제목 12자, 설명 20자까지. 펼치면 전체를 보인다 (SCREEN-SPEC 규칙 "긴 글") */}
+        <h3 className="card-title">{expanded ? task.title : shortTitle(task.title)}</h3>
+        {task.description !== null && (
+          <p className="card-description">
+            {expanded ? task.description : shortDescription(task.description)}
+          </p>
+        )}
+      </div>
       {confirmingDelete ? (
         // 지우기 전에 그 카드 자리에서 한 번 묻는다 (D-004, SCREEN-SPEC 규칙 "지울 때 확인 위치")
         <div className="confirm">
@@ -105,9 +148,10 @@ export default function TaskCard({
               <button
                 key={button.status}
                 type="button"
-                className="status-button"
-                // 지금 상태 버튼과, 고치는 동안의 상태 버튼은 누를 수 없다 (D-018)
-                disabled={editing || statusPending || button.status === task.status}
+                // 지금 상태 버튼은 따로 표시한다 (P-23)
+                className={button.status === task.status ? "status-button is-current" : "status-button"}
+                // 지금 상태 버튼과 요청 중인 상태 버튼은 누를 수 없다
+                disabled={statusPending || button.status === task.status}
                 onClick={() => handleStatus(button.status)}
               >
                 {button.label}
@@ -119,7 +163,8 @@ export default function TaskCard({
               type="button"
               className="text-button"
               onClick={onStartEdit}
-              disabled={editing || editLocked}
+              // 다른 카드를 고치는 중이면 누를 수 없다 (D-018)
+              disabled={editLocked}
             >
               고치기
             </button>
@@ -127,7 +172,6 @@ export default function TaskCard({
               type="button"
               className="text-button text-button-danger"
               onClick={() => setConfirmingDelete(true)}
-              disabled={editing}
             >
               지우기
             </button>
