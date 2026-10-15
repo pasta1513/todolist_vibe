@@ -11,7 +11,7 @@
   | --- | --- |
   | README.md | 있음 |
   | AGENTS.md | 있음 |
-  | DECISIONS.md (D-001~D-021) | 있음 |
+  | DECISIONS.md (D-001~D-022) | 있음 |
   | PRD.md | 있음 |
   | ARCHITECTURE.md | 있음 |
   | SCREEN-SPEC.md | 있음 |
