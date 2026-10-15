@@ -1,9 +1,12 @@
+import logging
 import re
 import sqlite3
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, Response
+from fastapi.staticfiles import StaticFiles
 
 import db
 
@@ -205,3 +208,15 @@ def delete_task(task_id: str):
     finally:
         conn.close()
     return Response(status_code=204)
+
+
+# 다 만든 뒤에는 FastAPI가 빌드된 화면 파일도 내보낸다 (D-013).
+# /api 요청은 위의 엔드포인트가 먼저 받고, 그 밖의 주소는 화면 파일이다 (API-SPEC "주소 앞부분").
+# 만드는 동안(D-011)처럼 화면을 빌드하지 않았으면 /api만 동작한다.
+FRONTEND_DIST = Path(__file__).parent.parent / "frontend" / "dist"
+if FRONTEND_DIST.is_dir():
+    app.mount("/", StaticFiles(directory=FRONTEND_DIST, html=True), name="frontend")
+else:
+    logging.getLogger("uvicorn.error").warning(
+        "화면 빌드 파일이 없습니다 (%s). /api만 동작합니다.", FRONTEND_DIST
+    )
