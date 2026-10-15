@@ -72,14 +72,16 @@ export default function App() {
   }
 
   return (
-    <>
-      <button type="button" onClick={() => setCreating(true)}>
-        새 카드
-      </button>
+    <div className="app">
+      <div className="toolbar">
+        <button type="button" className="btn btn-large btn-primary" onClick={() => setCreating(true)}>
+          새 카드
+        </button>
+      </div>
       <main className="board">
         {COLUMNS.map((column) => (
           <section key={column.status} className="column">
-            <h2>{column.title}</h2>
+            <h2 className="column-title">{column.title}</h2>
             {/* 서버가 준 순서대로 놓는다 (D-015) */}
             {tasks
               .filter((task) => task.status === column.status)
@@ -107,6 +109,6 @@ export default function App() {
         />
       )}
       <Alerts alerts={alerts} />
-    </>
+    </div>
   );
 }

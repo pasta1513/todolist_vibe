@@ -1,17 +1,87 @@
+/* 화면 모양 (P-22, 7판 기준). 깔끔하고 정돈된 모습, 카드마다 테두리로 구분한다 */
+
+/* 바탕과 글자 */
+body {
+  margin: 0;
+  background: #f5f6f8;
+  color: #1f2329;
+  font-family: "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* 버튼과 입력칸은 브라우저 기본 글꼴 대신 화면 글꼴을 쓴다 */
+button,
+input,
+textarea {
+  font-family: inherit;
+}
+
+button {
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+/* 키보드로 옮겨 갔을 때 어디에 있는지 보이게 한다 (SCREEN-SPEC 대안과 결정 3) */
+button:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+/* 전체 틀: 가운데에 최대 1200px */
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
 /* 세 칸 보드: 기본은 가로로 나란히 놓는다 */
 .board {
   display: flex;
-  gap: 16px;
+  gap: 12px;
 }
 
 .column {
   flex: 1;
   /* 긴 제목이 칸 폭을 넓히지 않게 한다 */
   min-width: 0;
+  background: #e9ecf1;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.column-title {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #3a4150;
+}
+
+/* 카드: 흰 바탕과 테두리로 한 장씩 구분한다 */
+.card {
+  background: #fff;
+  border: 1px solid #cfd5de;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
 }
 
 /* 카드에서 제목은 한 줄까지 보이고, 넘으면 "…"으로 줄인다 (R-011) */
 .card-title {
+  margin: 0 0 2px;
+  font-size: 15px;
+  font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -19,6 +89,9 @@
 
 /* 카드에서 설명은 두 줄까지 보이고, 넘으면 "…"으로 줄인다 (R-011) */
 .card-description {
+  margin: 0;
+  font-size: 13px;
+  color: #5b6472;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -27,17 +100,212 @@
   overflow-wrap: anywhere;
 }
 
-/* 고치기 입력칸: 칸 폭에 맞춰 감기고, 높이는 글 길이에 맞게 늘어난다 */
-.auto-textarea {
+/* 카드 아래 줄: 왼쪽은 상태 버튼, 오른쪽은 고치기·지우기. 폭이 모자라면 줄을 바꾼다 */
+.card-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.status-buttons,
+.card-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.card-actions {
+  margin-left: auto;
+}
+
+/* 상태 버튼: 지금 상태 버튼은 흰 바탕에 흐린 글자로, 누를 수 없게 보인다 (SCREEN-SPEC 대안과 결정 9) */
+.status-button {
+  font-size: 11px;
+  line-height: 1.4;
+  background: transparent;
+  color: #3a4150;
+  border: 0;
+  border-radius: 5px;
+  padding: 1px 6px;
+}
+
+.status-button:hover:not(:disabled) {
+  background: #f2f4f7;
+}
+
+.status-button:disabled {
+  background: #fff;
+  color: #a3abb8;
+  box-shadow: 0 0 0 1px #d9dee6;
+}
+
+/* 고치기·지우기: 테두리 없는 글자 버튼 */
+.text-button {
+  font-size: 11px;
+  line-height: 1.4;
+  background: transparent;
+  color: #2563eb;
+  border: 0;
+  border-radius: 4px;
+  padding: 1px 4px;
+}
+
+.text-button-danger {
+  color: #b42318;
+}
+
+.text-button:hover:not(:disabled) {
+  background: #f2f4f7;
+}
+
+.text-button:disabled {
+  color: #a3abb8;
+}
+
+/* 일반 버튼 (저장, 취소, 삭제) */
+.btn {
+  font-size: 11px;
+  line-height: 1.4;
+  background: #fff;
+  color: #1f2329;
+  border: 1px solid #cfd5de;
+  border-radius: 5px;
+  padding: 2px 8px;
+}
+
+.btn:hover:not(:disabled) {
+  background: #f2f4f7;
+}
+
+.btn-primary {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.btn-danger {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #fff;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+}
+
+/* 큰 버튼 (새 카드, 만들기, 닫기) */
+.btn-large {
+  font-size: 13px;
+  padding: 5px 12px;
+  border-radius: 6px;
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* 지울 때 확인: 질문 아래 줄에 삭제·취소 (SCREEN-SPEC 규칙 "지울 때 확인 위치") */
+.confirm {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #3a4150;
+}
+
+.confirm-question {
+  margin: 0 0 6px;
+}
+
+/* 입력칸: 이름은 굵게, 빈 제목 안내는 이름 옆에 빨간 글자로 (SCREEN-SPEC 규칙 "빈 제목 안내") */
+.field-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.hint {
+  margin-left: 8px;
+  font-size: 12px;
+  color: #dc2626;
+}
+
+.input {
   display: block;
   width: 100%;
   box-sizing: border-box;
+  margin: 4px 0 10px;
+  padding: 6px 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #1f2329;
+  background: #fff;
+  border: 1px solid #cfd5de;
+  border-radius: 6px;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+/* 고치기 입력칸: 칸 폭에 맞춰 감기고, 높이는 글 길이에 맞게 늘어난다 */
+.auto-textarea {
   resize: none;
   overflow: hidden;
 }
 
+/* 만들기 창 (D-017) */
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 20, 30, 0.45);
+}
+
+.dialog {
+  box-sizing: border-box;
+  width: min(420px, calc(100% - 32px));
+  padding: 20px;
+  background: #fff;
+  border: 1px solid #cfd5de;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(16, 24, 40, 0.18);
+}
+
+.dialog-title {
+  margin: 0 0 12px;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.dialog-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 4px;
+}
+
 /* 화면 폭이 768px보다 좁으면 세 칸을 세로로 쌓는다 (SCREEN-SPEC 규칙 "좁은 화면") */
 @media (max-width: 767.98px) {
+  .app {
+    padding: 16px;
+  }
+
   .board {
     flex-direction: column;
   }
@@ -46,17 +314,21 @@
 /* 실패 알림: 화면 위쪽, 만들기 창보다 위에 놓인다 (SCREEN-SPEC "5. 실패 알림", 규칙 "실패 알림과 창") */
 .alerts {
   position: fixed;
-  top: 8px;
+  top: 12px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .alert {
-  background: #fff0f0;
-  border: 1px solid #c33;
-  padding: 8px 12px;
+  background: #fff;
+  border: 1px solid #f1c4c4;
+  border-left: 4px solid #dc2626;
+  padding: 8px 14px;
+  font-size: 13px;
+  color: #7a1c1c;
+  box-shadow: 0 4px 12px rgba(16, 24, 40, 0.12);
 }

@@ -44,47 +44,50 @@ export default function CreateDialog({ onCreated, onClose, onFailure }: Props) {
   }
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0, 0, 0, 0.4)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
+    <div className="dialog-backdrop">
       <form
+        className="dialog"
         role="dialog"
         aria-modal="true"
         aria-label="새 카드 만들기"
         onSubmit={handleSubmit}
-        style={{ background: "white", padding: "16px", minWidth: "320px" }}
       >
-        <div>
-          <label>
-            제목{" "}
-            <input value={title} onChange={(e) => handleTitleChange(e.target.value)} autoFocus />
-          </label>{" "}
-          {showTitleHint && <span role="alert">제목을 적어 주세요</span>}
-        </div>
-        <div>
-          <label>
-            설명
-            <br />
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={4}
-            />
+        <h2 className="dialog-title">새 카드</h2>
+        <div className="field">
+          <label className="field-label" htmlFor="create-title">
+            제목
           </label>
+          {showTitleHint && (
+            <span className="hint" role="alert">
+              제목을 적어 주세요
+            </span>
+          )}
+          <input
+            id="create-title"
+            className="input"
+            value={title}
+            onChange={(e) => handleTitleChange(e.target.value)}
+            autoFocus
+          />
         </div>
-        <div>
-          <button type="submit" disabled={pending}>
-            만들기
-          </button>{" "}
-          <button type="button" onClick={onClose} disabled={pending}>
+        <div className="field">
+          <label className="field-label" htmlFor="create-description">
+            설명
+          </label>
+          <textarea
+            id="create-description"
+            className="input"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={4}
+          />
+        </div>
+        <div className="dialog-buttons">
+          <button type="button" className="btn btn-large" onClick={onClose} disabled={pending}>
             닫기
+          </button>
+          <button type="submit" className="btn btn-large btn-primary" disabled={pending}>
+            만들기
           </button>
         </div>
       </form>

@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { useId, useLayoutEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { isNotFound } from "./Alerts";
 import { changeStatus, deleteTask, updateTask, type Task, type TaskStatus } from "./api";
 import { isBlank } from "./text";
@@ -82,34 +82,56 @@ export default function TaskCard({
       )}
       {confirmingDelete ? (
         // 지우기 전에 그 카드 자리에서 한 번 묻는다 (D-004, SCREEN-SPEC 규칙 "지울 때 확인 위치")
-        <div>
-          정말 삭제할까요?{" "}
-          <button type="button" onClick={handleDelete} disabled={deletePending}>
-            삭제
-          </button>{" "}
-          <button type="button" onClick={() => setConfirmingDelete(false)} disabled={deletePending}>
-            취소
-          </button>
+        <div className="confirm">
+          <p className="confirm-question">정말 삭제할까요?</p>
+          <div className="button-row">
+            <button type="button" className="btn btn-danger" onClick={handleDelete} disabled={deletePending}>
+              삭제
+            </button>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => setConfirmingDelete(false)}
+              disabled={deletePending}
+            >
+              취소
+            </button>
+          </div>
         </div>
       ) : (
-        <div>
-          {STATUS_BUTTONS.map((button) => (
+        <div className="card-row">
+          <span className="status-buttons">
+            {STATUS_BUTTONS.map((button) => (
+              <button
+                key={button.status}
+                type="button"
+                className="status-button"
+                // 지금 상태 버튼과, 고치는 동안의 상태 버튼은 누를 수 없다 (D-018)
+                disabled={editing || statusPending || button.status === task.status}
+                onClick={() => handleStatus(button.status)}
+              >
+                {button.label}
+              </button>
+            ))}
+          </span>
+          <span className="card-actions">
             <button
-              key={button.status}
               type="button"
-              // 지금 상태 버튼과, 고치는 동안의 상태 버튼은 누를 수 없다 (D-018)
-              disabled={editing || statusPending || button.status === task.status}
-              onClick={() => handleStatus(button.status)}
+              className="text-button"
+              onClick={onStartEdit}
+              disabled={editing || editLocked}
             >
-              {button.label}
+              고치기
             </button>
-          ))}{" "}
-          <button type="button" onClick={onStartEdit} disabled={editing || editLocked}>
-            고치기
-          </button>{" "}
-          <button type="button" onClick={() => setConfirmingDelete(true)} disabled={editing}>
-            지우기
-          </button>
+            <button
+              type="button"
+              className="text-button text-button-danger"
+              onClick={() => setConfirmingDelete(true)}
+              disabled={editing}
+            >
+              지우기
+            </button>
+          </span>
         </div>
       )}
     </article>
@@ -159,38 +181,46 @@ function EditForm({ task, onSaved, onClose, onFailure }: EditFormProps) {
     }
   }
 
+  const titleId = useId();
+  const descriptionId = useId();
+
   return (
     <form onSubmit={handleSubmit}>
-      <div>
-        <label>
+      <div className="field">
+        <label className="field-label" htmlFor={titleId}>
           제목
-          <AutoTextarea
-            value={title}
-            onChange={handleTitleChange}
-            // 제목에는 Enter로 줄바꿈을 넣지 않는다 (SCREEN-SPEC 규칙 "고치기 입력칸")
-            // 한국어 입력 조합을 끝내는 Enter는 막지 않는다
-            onEnter={(e) => {
-              if (!e.nativeEvent.isComposing) {
-                e.preventDefault();
-              }
-            }}
-            autoFocus
-          />
         </label>
-        {showTitleHint && <span role="alert">제목을 적어 주세요</span>}
+        {showTitleHint && (
+          <span className="hint" role="alert">
+            제목을 적어 주세요
+          </span>
+        )}
+        <AutoTextarea
+          id={titleId}
+          value={title}
+          onChange={handleTitleChange}
+          // 제목에는 Enter로 줄바꿈을 넣지 않는다 (SCREEN-SPEC 규칙 "고치기 입력칸")
+          // 한국어 입력 조합을 끝내는 Enter는 막지 않는다
+          onEnter={(e) => {
+            if (!e.nativeEvent.isComposing) {
+              e.preventDefault();
+            }
+          }}
+          autoFocus
+        />
       </div>
-      <div>
-        <label>
+      <div className="field">
+        <label className="field-label" htmlFor={descriptionId}>
           설명
-          <AutoTextarea value={description} onChange={setDescription} />
         </label>
+        <AutoTextarea id={descriptionId} value={description} onChange={setDescription} />
       </div>
-      <div>
-        <button type="submit" disabled={pending}>
+      <div className="button-row">
+        <button type="submit" className="btn btn-primary" disabled={pending}>
           저장
-        </button>{" "}
+        </button>
         {/* 취소하면 서버에 요청하지 않고 원래 내용으로 돌아간다 (R-014, ARCHITECTURE A-3) */}
-        <button type="button" onClick={onClose} disabled={pending}>
+        <button type="button" className="btn" onClick={onClose} disabled={pending}>
           취소
         </button>
       </div>
@@ -199,6 +229,7 @@ function EditForm({ task, onSaved, onClose, onFailure }: EditFormProps) {
 }
 
 type AutoTextareaProps = {
+  id: string;
   value: string;
   onChange: (value: string) => void;
   onEnter?: (event: KeyboardEvent<HTMLTextAreaElement>) => void;
@@ -206,22 +237,26 @@ type AutoTextareaProps = {
 };
 
 // 글 길이에 맞게 높이가 늘어나 전체가 보이는 입력칸 (SCREEN-SPEC 규칙 "고치기 입력칸", R-011)
-function AutoTextarea({ value, onChange, onEnter, autoFocus }: AutoTextareaProps) {
+function AutoTextarea({ id, value, onChange, onEnter, autoFocus }: AutoTextareaProps) {
   const ref = useRef<HTMLTextAreaElement>(null);
 
   useLayoutEffect(() => {
     const el = ref.current;
     if (el) {
-      // border-box라서 위아래 테두리 두께(offsetHeight - clientHeight)를 더해야 마지막 줄이 가려지지 않는다
+      // border-box라서 위아래 테두리 두께를 더해야 마지막 줄이 가려지지 않는다.
+      // 화면 배율에 따라 테두리가 소수점 두께로 그려지므로 실제 두께를 읽고 올림한다
+      const style = getComputedStyle(el);
+      const borders = parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth);
       el.style.height = "auto";
-      el.style.height = `${el.scrollHeight + el.offsetHeight - el.clientHeight}px`;
+      el.style.height = `${Math.ceil(el.scrollHeight + borders)}px`;
     }
   }, [value]);
 
   return (
     <textarea
       ref={ref}
-      className="auto-textarea"
+      id={id}
+      className="input auto-textarea"
       rows={1}
       value={value}
       autoFocus={autoFocus}
