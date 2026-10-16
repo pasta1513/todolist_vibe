@@ -331,6 +331,68 @@ button:focus-visible {
   margin-top: 4px;
 }
 
+/* 계정 줄: 보드 위쪽 오른쪽에 아이디와 로그아웃 (SCREEN-SPEC "8. 계정 줄") */
+.account-bar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.account-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #5b6472;
+}
+
+/* 로그인·가입 화면: 가운데에 놓인 흰 상자 (SCREEN-SPEC "6. 로그인 화면", "7. 회원가입 화면") */
+.auth-screen {
+  display: flex;
+  justify-content: center;
+  padding-top: 48px;
+}
+
+.auth-form {
+  box-sizing: border-box;
+  width: min(360px, 100%);
+  padding: 20px;
+  background: #fff;
+  border: 1px solid #cfd5de;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+}
+
+.auth-title {
+  margin: 0 0 12px;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+/* 가입 화면 입력칸 아래에 늘 보이는 규칙 안내 */
+.field-help {
+  margin: -6px 0 10px;
+  font-size: 12px;
+  color: #5b6472;
+}
+
+/* 로그인 안내: "로그인" 버튼 위에 남는다 (SCREEN-SPEC 규칙 "로그인 실패 안내") */
+.auth-message {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: #dc2626;
+}
+
+.auth-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
 /* 화면 폭이 768px보다 좁으면 세 칸을 세로로 쌓는다 (SCREEN-SPEC 규칙 "좁은 화면") */
 @media (max-width: 767.98px) {
   .app {

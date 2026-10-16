@@ -12,7 +12,14 @@ const MESSAGES: Record<ApiFailure, string> = {
   NOT_FOUND: "이미 지워진 카드예요.",
   SAVE_FAILED: "저장하지 못했어요. 다시 해 주세요.",
   LOAD_FAILED: "카드를 불러오지 못했어요.",
+  // 두 번째 버전 (SCREEN-SPEC "5. 실패 알림", 규칙 "가입 입력 안내", "로그인 실패 안내")
+  NOT_LOGGED_IN: "다시 로그인해 주세요.",
+  LOGIN_FAILED: "아이디 또는 비밀번호가 맞지 않아요.",
+  USERNAME_TAKEN: "이미 쓰는 아이디예요",
 };
+
+// 로그아웃 저장 실패 문구 (SCREEN-SPEC "5. 실패 알림")
+export const LOGOUT_FAILED_MESSAGE = "로그아웃하지 못했어요. 다시 해 주세요.";
 
 // 목록 불러오기 실패는 원인과 상관없이 이 문구다 (SCREEN-SPEC 규칙 "목록 불러오기 실패 문구")
 export const LOAD_FAILED_MESSAGE = MESSAGES.LOAD_FAILED;
@@ -23,7 +30,11 @@ export function failureMessage(err: unknown): string {
 }
 
 export function isNotFound(err: unknown): boolean {
-  return err instanceof ApiError && err.kind === "NOT_FOUND";
+  return isFailure(err, "NOT_FOUND");
+}
+
+export function isFailure(err: unknown, kind: ApiFailure): boolean {
+  return err instanceof ApiError && err.kind === kind;
 }
 
 // 화면 위쪽 알림. 만들기 창보다 위에 놓이고, 여러 개면 차례로 쌓인다 (SCREEN-SPEC 규칙 "알림 여러 개")

@@ -11,7 +11,16 @@ export type Task = {
 };
 
 // 실패 종류 (API-SPEC "실패 응답"). CONNECTION은 "연결 안 됨"이다
-const FAILURES = ["INVALID_INPUT", "NOT_FOUND", "SAVE_FAILED", "LOAD_FAILED"] as const;
+const FAILURES = [
+  "INVALID_INPUT",
+  "NOT_FOUND",
+  "SAVE_FAILED",
+  "LOAD_FAILED",
+  // 두 번째 버전 (API-SPEC "실패 응답")
+  "NOT_LOGGED_IN",
+  "LOGIN_FAILED",
+  "USERNAME_TAKEN",
+] as const;
 export type ApiFailure = (typeof FAILURES)[number] | "CONNECTION";
 
 export class ApiError extends Error {
@@ -81,4 +90,29 @@ export async function updateTask(id: number, title: string, description: string 
 // 삭제: 성공하면 204, 응답 본문은 읽지 않는다 (API-SPEC 결정 기록 10)
 export async function deleteTask(id: number): Promise<void> {
   await request(`/api/tasks/${id}`, { method: "DELETE" });
+}
+
+// 로그인한 계정 (API-SPEC "엔드포인트" /api/auth/…)
+// 로그인 상태는 서버가 준 쿠키에 맡기고, 화면 코드는 쿠키를 다루지 않는다 (ARCHITECTURE A-6)
+export type Account = {
+  username: string;
+};
+
+// 로그인 확인: 로그인하지 않았으면 NOT_LOGGED_IN (API-SPEC 결정 기록 13)
+export async function fetchMe(): Promise<Account> {
+  return (await request("/api/auth/me")).json();
+}
+
+// 회원가입: 성공하면 바로 로그인된다 (R-029)
+export async function signup(username: string, password: string): Promise<Account> {
+  return (await request("/api/auth/signup", jsonInit("POST", { username, password }))).json();
+}
+
+export async function login(username: string, password: string): Promise<Account> {
+  return (await request("/api/auth/login", jsonInit("POST", { username, password }))).json();
+}
+
+// 로그아웃: 성공하면 204, 응답 본문은 읽지 않는다
+export async function logout(): Promise<void> {
+  await request("/api/auth/logout", { method: "POST" });
 }

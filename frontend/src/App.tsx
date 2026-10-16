@@ -1,6 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import Alerts, { failureMessage, LOAD_FAILED_MESSAGE, type Alert } from "./Alerts";
-import { fetchTasks, type Task, type TaskStatus } from "./api";
+import Alerts, {
+  failureMessage,
+  isFailure,
+  LOAD_FAILED_MESSAGE,
+  LOGOUT_FAILED_MESSAGE,
+  type Alert,
+} from "./Alerts";
+import { fetchMe, fetchTasks, logout, type Account, type Task, type TaskStatus } from "./api";
+import AuthScreen from "./AuthScreen";
 import CreateDialog from "./CreateDialog";
 import TaskCard from "./TaskCard";
 import "./App.css";
@@ -12,11 +19,16 @@ const COLUMNS: { status: TaskStatus; title: string }[] = [
   { status: "DONE", title: "완료" },
 ];
 
+// 로그인 확인 전(checking), 확인 실패(failed), 로그인 안 됨(loggedOut), 로그인됨(Account)
+type Session = "checking" | "failed" | "loggedOut" | Account;
+
 export default function App() {
+  const [session, setSession] = useState<Session>("checking");
   const [tasks, setTasks] = useState<Task[]>([]);
   const [creating, setCreating] = useState(false);
   // 한 번에 한 장만 고친다 (D-018)
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [logoutPending, setLogoutPending] = useState(false);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const nextAlertId = useRef(1);
 
@@ -32,20 +44,80 @@ export default function App() {
     }
   }
 
+  // 로그인 화면으로 돌아간다. 보드, 만들기 창, 고치던 내용은 모두 비운다
+  // (SCREEN-SPEC 규칙 "로그인이 풀렸을 때", "로그아웃과 적던 내용")
+  function showLogin() {
+    setSession("loggedOut");
+    setTasks([]);
+    setCreating(false);
+    setEditingId(null);
+  }
+
   function handleFailure(err: unknown) {
     console.error(err);
+    // 쓰는 중에 로그인이 풀리면 로그인 화면으로 바꾼다 (SCREEN-SPEC 대안과 결정 16)
+    if (isFailure(err, "NOT_LOGGED_IN")) {
+      showLogin();
+    }
     addAlert(failureMessage(err));
   }
 
-  useEffect(() => {
-    // 목록을 못 불러오면 "카드가 없음"과 구별되게 알린다 (ARCHITECTURE A-5)
+  // 목록을 못 불러오면 "카드가 없음"과 구별되게 알린다 (ARCHITECTURE A-5)
+  function loadTasks() {
     fetchTasks()
       .then(setTasks)
       .catch((err) => {
         console.error(err);
+        if (isFailure(err, "NOT_LOGGED_IN")) {
+          showLogin();
+          addAlert(failureMessage(err));
+        } else {
+          addAlert(LOAD_FAILED_MESSAGE, true);
+        }
+      });
+  }
+
+  useEffect(() => {
+    // 앱을 열면 먼저 로그인을 확인한다 (ARCHITECTURE 흐름 8, API-SPEC 결정 기록 13)
+    fetchMe()
+      .then((account) => {
+        setSession(account);
+        loadTasks();
+      })
+      .catch((err) => {
+        if (isFailure(err, "NOT_LOGGED_IN")) {
+          setSession("loggedOut");
+          return;
+        }
+        // 서버 문제를 로그인 문제로 착각하지 않게, 로그인 화면 대신 사라지지 않는 알림을 보인다
+        // (SCREEN-SPEC 규칙 "앱을 열 때 로그인 확인 실패", 대안과 결정 17)
+        console.error(err);
+        setSession("failed");
         addAlert(LOAD_FAILED_MESSAGE, true);
       });
   }, []);
+
+  // 로그인·가입에 성공하면 그 계정의 보드를 연다 (R-021, R-029)
+  function handleLoggedIn(account: Account) {
+    setSession(account);
+    setTasks([]);
+    loadTasks();
+  }
+
+  // 묻지 않고 로그아웃한다 (SCREEN-SPEC 대안과 결정 13)
+  async function handleLogout() {
+    setLogoutPending(true);
+    try {
+      await logout();
+      showLogin();
+    } catch (err) {
+      console.error(err);
+      // 실패하면 로그인된 채로 있다 (SCREEN-SPEC "5. 실패 알림")
+      addAlert(isFailure(err, "SAVE_FAILED") ? LOGOUT_FAILED_MESSAGE : failureMessage(err));
+    } finally {
+      setLogoutPending(false);
+    }
+  }
 
   // 서버가 성공을 응답한 뒤에만 카드를 더한다 (D-014)
   // 새 카드는 가장 큰 position을 받으므로 맨 끝에 놓으면 "할 일" 칸 맨 아래가 된다 (R-008, D-020)
@@ -71,8 +143,33 @@ export default function App() {
     setEditingId((current) => (current === id ? null : current));
   }
 
+  // 로그인 확인 전에는 아무것도 보이지 않는다 (SCREEN-SPEC 열린 질문 6)
+  if (session === "checking" || session === "failed") {
+    return (
+      <div className="app">
+        <Alerts alerts={alerts} />
+      </div>
+    );
+  }
+
+  if (session === "loggedOut") {
+    return (
+      <div className="app">
+        <AuthScreen onLoggedIn={handleLoggedIn} onFailure={handleFailure} />
+        <Alerts alerts={alerts} />
+      </div>
+    );
+  }
+
   return (
     <div className="app">
+      {/* 보드 위쪽 오른쪽에 로그인한 아이디와 로그아웃 (SCREEN-SPEC "8. 계정 줄") */}
+      <div className="account-bar">
+        <span className="account-name">{session.username}</span>
+        <button type="button" className="btn" onClick={handleLogout} disabled={logoutPending}>
+          로그아웃
+        </button>
+      </div>
       <div className="toolbar">
         <button type="button" className="btn btn-large btn-primary" onClick={() => setCreating(true)}>
           새 카드
